@@ -6,7 +6,6 @@ import json
 from urllib import request
 from tkinter import *
 from contextlib import contextmanager
-import pyowm
 
 ui_locale = '' # e.g. 'fr_FR' fro French, '' as default
 time_format = 12 # 12 or 24
@@ -33,11 +32,11 @@ class Clock(Frame):
         Frame.__init__(self, parent, bg='black')
         # initialize time label
         self.time1 = ''
-        self.timeLbl = Label(self, font=('Helvetica', large_text_size), fg="blue", bg="black")
+        self.timeLbl = Label(self, font=('Verdana', large_text_size), fg="white", bg="black")
         self.timeLbl.pack(side=TOP, anchor=E)
         # initialize day of week
         self.day_of_week1 = ''
-        self.dayOWLbl = Label(self, text=self.day_of_week1, font=('Helvetica', small_text_size), fg="white", bg="black")
+        self.dayOWLbl = Label(self, text=self.day_of_week1, font=('Courier', small_text_size), fg="white", bg="black")
         self.dayOWLbl.pack(side=TOP, anchor=E)
         # initialize date label
         self.date1 = ''
@@ -72,6 +71,8 @@ class Weather(Frame):
         Frame.__init__(self, parent, bg='black')
         self.temperature = ''
         self.location = ''
+        self.tempLbl = Label(self, font=('Courier', large_text_size), fg="white", bg="black")
+        self.tempLbl.pack(side=RIGHT, anchor=E)
         owm = self.get_weather()
         for keys,values in owm.items():
             print(keys)
@@ -86,12 +87,11 @@ class Weather(Frame):
         try:
             weather_api_url = "http://api.openweathermap.org/data/2.5/weather?id=524901&APPID=e8f68888e32b9e688db40c7a784aa417&q=92037,us&units=imperial"
             forecast_api_url = "http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID=e8f68888e32b9e688db40c7a784aa417&q=92037,us&units=imperial"
-            req = request.urlopen(forecast_api_url)      # calls for info from Open Weather Map
+            req = request.urlopen(weather_api_url)      # calls for info from Open Weather Map
             omw = req.read().decode('utf-8')            # decodes the bytes into a json format
             data = json.loads(omw)                      # decodes json into dictionary
-            #main = data['main']
-            #weather = data['weather']
-            #city = data['name']
+            self.temperature = str(data['main']['temp']) + u'\N{DEGREE SIGN}' + 'F'
+            self.tempLbl.config(text=self.temperature)
         
             return data
 
@@ -101,14 +101,17 @@ class Weather(Frame):
             print('Cannot get weather')
 
 
+
 class FullscreenWindow:
 
     def __init__(self):
         self.tk = Tk()
         self.tk.configure(background='black')
         self.topFrame = Frame(self.tk, background = 'black')
+        self.centerFrame = Frame(self.tk, background = 'black')
         self.bottomFrame = Frame(self.tk, background = 'black')
         self.topFrame.pack(side = TOP, fill=BOTH, expand = YES)
+        self.centerFrame.pack(side = TOP, fill=BOTH, expand = YES)
         self.bottomFrame.pack(side = BOTTOM, fill=BOTH, expand = YES)
         self.state = False
         self.tk.bind("<Return>", self.toggle_fullscreen)
@@ -116,8 +119,13 @@ class FullscreenWindow:
         # clock
         self.clock = Clock(self.topFrame)
         self.clock.pack(side=RIGHT, anchor=N, padx=100, pady=60)
-        #weather
-        self.weather = Weather(self.topFrame)
+        # weather
+        self.weather = Weather(self.centerFrame)
+        self.weather.pack(side=RIGHT, anchor=N, padx=100, pady=60)
+
+        self.test = Weather(self.bottomFrame)
+        self.test.pack(side=RIGHT, anchor=N, padx=100, pady=60)
+        
 
 
     def toggle_fullscreen(self, event=None):
